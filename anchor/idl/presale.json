@@ -1,0 +1,235 @@
+{
+    "version": "0.1.0",
+    "name": "presale",
+    "instructions": [
+        {
+            "name": "initialize",
+            "accounts": [
+                { "name": "authority", "isMut": true, "isSigner": true },
+                { "name": "treasury", "isMut": true, "isSigner": false },
+                { "name": "mint", "isMut": false, "isSigner": false },
+                { "name": "vault", "isMut": true, "isSigner": false },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "systemProgram", "isMut": false, "isSigner": false },
+                { "name": "tokenProgram", "isMut": false, "isSigner": false },
+                { "name": "associatedTokenProgram", "isMut": false, "isSigner": false },
+                { "name": "rent", "isMut": false, "isSigner": false }
+            ],
+            "args": [
+                { "name": "params", "type": { "defined": "InitializeParams" } }
+            ]
+        },
+        {
+            "name": "whitelistSet",
+            "accounts": [
+                { "name": "authority", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "buyer", "isMut": false, "isSigner": false },
+                { "name": "whitelist", "isMut": true, "isSigner": false },
+                { "name": "systemProgram", "isMut": false, "isSigner": false }
+            ],
+            "args": [
+                { "name": "maxContributionLamports", "type": "u64" }
+            ]
+        },
+        {
+            "name": "advancePhase",
+            "accounts": [
+                { "name": "authority", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false }
+            ],
+            "args": []
+        },
+        {
+            "name": "buy",
+            "accounts": [
+                { "name": "buyer", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "buyerState", "isMut": true, "isSigner": false },
+                { "name": "whitelist", "isMut": false, "isSigner": false },
+                { "name": "systemProgram", "isMut": false, "isSigner": false }
+            ],
+            "args": [
+                { "name": "lamports", "type": "u64" }
+            ]
+        },
+        {
+            "name": "finalize",
+            "accounts": [
+                { "name": "authority", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "treasury", "isMut": true, "isSigner": false },
+                { "name": "tokenProgram", "isMut": false, "isSigner": false }
+            ],
+            "args": []
+        },
+        {
+            "name": "cancel",
+            "accounts": [
+                { "name": "authority", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "treasury", "isMut": true, "isSigner": false },
+                { "name": "tokenProgram", "isMut": false, "isSigner": false }
+            ],
+            "args": []
+        },
+        {
+            "name": "refund",
+            "accounts": [
+                { "name": "buyer", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "buyerState", "isMut": true, "isSigner": false }
+            ],
+            "args": []
+        },
+        {
+            "name": "claim",
+            "accounts": [
+                { "name": "buyer", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "buyerState", "isMut": true, "isSigner": false },
+                { "name": "vault", "isMut": true, "isSigner": false },
+                { "name": "buyerAta", "isMut": true, "isSigner": false },
+                { "name": "mint", "isMut": false, "isSigner": false },
+                { "name": "tokenProgram", "isMut": false, "isSigner": false },
+                { "name": "associatedTokenProgram", "isMut": false, "isSigner": false },
+                { "name": "systemProgram", "isMut": false, "isSigner": false }
+            ],
+            "args": []
+        },
+        {
+            "name": "withdrawFunds",
+            "accounts": [
+                { "name": "authority", "isMut": true, "isSigner": true },
+                { "name": "state", "isMut": true, "isSigner": false },
+                { "name": "treasury", "isMut": true, "isSigner": false },
+                { "name": "tokenProgram", "isMut": false, "isSigner": false }
+            ],
+            "args": []
+        }
+    ],
+    "accounts": [
+        {
+            "name": "PresaleState",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "authority", "type": "publicKey" },
+                    { "name": "mint", "type": "publicKey" },
+                    { "name": "vault", "type": "publicKey" },
+                    { "name": "treasury", "type": "publicKey" },
+                    { "name": "startTs", "type": "u64" },
+                    { "name": "endTs", "type": "u64" },
+                    { "name": "tgeTs", "type": "u64" },
+                    { "name": "tgeBps", "type": "u16" },
+                    { "name": "cliffSeconds", "type": "u64" },
+                    { "name": "vestingSeconds", "type": "u64" },
+                    { "name": "softCapLamports", "type": "u64" },
+                    { "name": "hardCapLamports", "type": "u64" },
+                    { "name": "totalRaisedLamports", "type": "u64" },
+                    { "name": "currentPhase", "type": { "defined": "Phase" } },
+                    { "name": "phase1TokensPerSol", "type": "u64" },
+                    { "name": "phase2TokensPerSol", "type": "u64" },
+                    { "name": "phase3TokensPerSol", "type": "u64" },
+                    { "name": "phase1TokensOffered", "type": "u64" },
+                    { "name": "phase2TokensOffered", "type": "u64" },
+                    { "name": "phase3TokensOffered", "type": "u64" },
+                    { "name": "phase1SoldTokens", "type": "u64" },
+                    { "name": "phase2SoldTokens", "type": "u64" },
+                    { "name": "phase3SoldTokens", "type": "u64" },
+                    { "name": "finalized", "type": "bool" },
+                    { "name": "canceled", "type": "bool" },
+                    { "name": "bump", "type": "u8" }
+                ]
+            }
+        },
+        {
+            "name": "BuyerState",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "state", "type": "publicKey" },
+                    { "name": "buyer", "type": "publicKey" },
+                    { "name": "contributedLamports", "type": "u64" },
+                    { "name": "allocatedTokens", "type": "u64" },
+                    { "name": "claimedTokens", "type": "u64" },
+                    { "name": "phase1Tokens", "type": "u64" },
+                    { "name": "phase2Tokens", "type": "u64" },
+                    { "name": "phase3Tokens", "type": "u64" }
+                ]
+            }
+        },
+        {
+            "name": "WhitelistEntry",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "state", "type": "publicKey" },
+                    { "name": "buyer", "type": "publicKey" },
+                    { "name": "maxContributionLamports", "type": "u64" }
+                ]
+            }
+        }
+    ],
+    "types": [
+        {
+            "name": "InitializeParams",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    { "name": "startTs", "type": "u64" },
+                    { "name": "endTs", "type": "u64" },
+                    { "name": "tgeTs", "type": "u64" },
+                    { "name": "tgeBps", "type": "u16" },
+                    { "name": "cliffSeconds", "type": "u64" },
+                    { "name": "vestingSeconds", "type": "u64" },
+                    { "name": "softCapLamports", "type": "u64" },
+                    { "name": "hardCapLamports", "type": "u64" },
+                    { "name": "phase1TokensPerSol", "type": "u64" },
+                    { "name": "phase2TokensPerSol", "type": "u64" },
+                    { "name": "phase3TokensPerSol", "type": "u64" },
+                    { "name": "phase1TokensOffered", "type": "u64" },
+                    { "name": "phase2TokensOffered", "type": "u64" },
+                    { "name": "phase3TokensOffered", "type": "u64" }
+                ]
+            }
+        },
+        {
+            "name": "Phase",
+            "type": {
+                "kind": "enum",
+                "variants": [
+                    { "name": "Whitelist" },
+                    { "name": "Public" },
+                    { "name": "Final" }
+                ]
+            }
+        }
+    ],
+    "errors": [
+        { "code": 6000, "name": "Unauthorized", "msg": "Unauthorized" },
+        { "code": 6001, "name": "InvalidBps", "msg": "Invalid BPS" },
+        { "code": 6002, "name": "InvalidTime", "msg": "Invalid time configuration" },
+        { "code": 6003, "name": "InvalidCap", "msg": "Invalid caps" },
+        { "code": 6004, "name": "SaleNotStarted", "msg": "Sale not started" },
+        { "code": 6005, "name": "SaleEnded", "msg": "Sale already ended" },
+        { "code": 6006, "name": "SaleNotEnded", "msg": "Sale not ended" },
+        { "code": 6007, "name": "SoftCapNotMet", "msg": "Soft cap not met" },
+        { "code": 6008, "name": "AlreadyFinalized", "msg": "Sale already finalized" },
+        { "code": 6009, "name": "SaleCanceled", "msg": "Sale canceled" },
+        { "code": 6010, "name": "HardCapExceeded", "msg": "Hard cap exceeded" },
+        { "code": 6011, "name": "PerWalletLimitExceeded", "msg": "Per-wallet limit exceeded" },
+        { "code": 6012, "name": "MathOverflow", "msg": "Math overflow" },
+        { "code": 6013, "name": "InvalidVaultMint", "msg": "Invalid vault mint" },
+        { "code": 6014, "name": "InvalidVaultOwner", "msg": "Invalid vault owner" },
+        { "code": 6015, "name": "InvalidWhitelist", "msg": "Invalid whitelist account" },
+        { "code": 6016, "name": "InvalidBuyerState", "msg": "Invalid buyer state" },
+        { "code": 6017, "name": "NothingToRefund", "msg": "Nothing to refund" },
+        { "code": 6018, "name": "NothingToClaim", "msg": "Nothing to claim" },
+        { "code": 6019, "name": "NothingToWithdraw", "msg": "Nothing to withdraw" },
+        { "code": 6020, "name": "RefundNotAvailable", "msg": "Refund not available" },
+        { "code": 6021, "name": "NotFinalized", "msg": "Not finalized" },
+        { "code": 6022, "name": "PhaseLimitExceeded", "msg": "Phase limit exceeded" },
+        { "code": 6023, "name": "AlreadyFinalPhase", "msg": "Already in final phase" }
+    ]
+}
