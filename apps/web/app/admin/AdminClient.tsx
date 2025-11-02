@@ -9,19 +9,21 @@ import { fetchState } from "@/lib/anchor/tx";
 import { Button } from "@/components/ui/button";
 import WhitelistForm from "@/components/presale/WhitelistForm";
 import PhaseControls from "@/components/presale/PhaseControls";
+import InitializeForm from "@/components/presale/InitializeForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { config } from "@/lib/config";
 import { ConnectButton } from "@/components/wallet/ConnectButton";
 
 interface AdminClientProps {
-  state: ParsedState;
+  state: ParsedState | null;
   statePk: string;
 }
 
 export default function AdminClient({ state: initialState, statePk }: AdminClientProps) {
   const wallet = useWallet();
-  const [state, setState] = useState(initialState);
+  const [state, setState] = useState<ParsedState | null>(initialState);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const program = useMemo(() => getReadonlyClientProgram(), []);
   const statePublicKey = new PublicKey(statePk);
 
@@ -30,6 +32,16 @@ export default function AdminClient({ state: initialState, statePk }: AdminClien
     try {
       const nextState = await fetchState(program, statePublicKey);
       setState(nextState);
+      setError(null);
+    } catch (refreshError) {
+      const message = (refreshError as Error).message ?? "Erro ao carregar estado";
+      if (message.includes("Account does not exist")) {
+        setState(null);
+        setError(null);
+      } else {
+        console.error(refreshError);
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -39,7 +51,8 @@ export default function AdminClient({ state: initialState, statePk }: AdminClien
     void refresh();
   }, [refresh]);
 
-  const isAuthority = wallet.publicKey?.toBase58() === state.authority;
+  const authorityAddress = state?.authority ?? config.authority;
+  const isAuthority = wallet.publicKey?.toBase58() === authorityAddress;
 
   return (
     <div className="space-y-8">
@@ -59,15 +72,24 @@ export default function AdminClient({ state: initialState, statePk }: AdminClien
           {loading ? "Atualizando..." : "Atualizar"}
         </Button>
       </div>
+      {error && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+          <p className="text-sm text-red-200">{error}</p>
+        </div>
+      )}
       {!isAuthority ? (
         <Card>
           <CardHeader>
             <CardTitle>Acesso restrito</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-400">Conecte a carteira da autoridade ({state.authority}).</p>
+            <p className="text-sm text-slate-400">Conecte a carteira da autoridade ({authorityAddress}).</p>
           </CardContent>
         </Card>
+      ) : state === null ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          <InitializeForm statePk={statePk} onCompleted={refresh} />
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           <WhitelistForm statePk={statePk} onCompleted={refresh} />
