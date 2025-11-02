@@ -1,11 +1,17 @@
 import { BN, Program } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, SYSVAR_RENT_PUBKEY, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync
 } from "@solana/spl-token";
-import type { ParsedState, ParsedBuyerState, ParsedWhitelistEntry, PresaleIdl } from "./types";
+import type {
+  ParsedState,
+  ParsedBuyerState,
+  ParsedWhitelistEntry,
+  PresaleIdl,
+  InitializeParams
+} from "./types";
 import { deriveBuyerState, deriveState, deriveWhitelist } from "./pdas";
 import { fetchParsedBuyerState, fetchParsedState, fetchParsedWhitelist } from "./parse";
 
@@ -143,6 +149,40 @@ export async function refund({ program, buyer, state }: RefundArgs) {
     .instruction();
 
   return { instruction: ix };
+}
+
+export async function initialize({
+  program,
+  authority,
+  treasury,
+  mint,
+  params
+}: {
+  program: Program<PresaleIdl>;
+  authority: PublicKey;
+  treasury: PublicKey;
+  mint: PublicKey;
+  params: InitializeParams;
+}) {
+  const [statePk] = deriveState(authority, mint);
+  const vaultPk = getAssociatedTokenAddressSync(mint, statePk, true);
+
+  const ix = await program.methods
+    .initialize(params)
+    .accounts({
+      authority,
+      treasury,
+      mint,
+      vault: vaultPk,
+      state: statePk,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY
+    })
+    .instruction();
+
+  return { instruction: ix, statePk, vaultPk };
 }
 
 export async function whitelistSet({

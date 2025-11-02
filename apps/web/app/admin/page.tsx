@@ -10,7 +10,16 @@ export default async function AdminPage() {
   const mintPk = new PublicKey(config.mint);
   const [statePk] = deriveState(authorityPk, mintPk);
   const program = getReadonlyProgram();
-  const state = await fetchState(program, statePk);
+  let state: Awaited<ReturnType<typeof fetchState>> | null = null;
+
+  try {
+    state = await fetchState(program, statePk);
+  } catch (error) {
+    const message = (error as Error).message ?? "";
+    if (!message.includes("Account does not exist")) {
+      throw error;
+    }
+  }
 
   return <AdminClient state={state} statePk={statePk.toBase58()} />;
 }
