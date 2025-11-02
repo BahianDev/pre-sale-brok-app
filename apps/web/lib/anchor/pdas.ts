@@ -2,6 +2,21 @@ import { PublicKey } from "@solana/web3.js";
 import { config } from "@/lib/config";
 import { PROGRAM_ID } from "./client";
 
+const configuredStatePda = (() => {
+  if (!config.stateAddress) {
+    return null;
+  }
+
+  try {
+    return {
+      publicKey: new PublicKey(config.stateAddress),
+      bump: config.stateBump ?? 0
+    } as const;
+  } catch (error) {
+    throw new Error("Invalid NEXT_PUBLIC_STATE_ADDRESS provided", { cause: error });
+  }
+})();
+
 function toSeedBuffer(seed: string, label: string): Buffer {
   const normalized = seed.trim();
   if (!normalized) {
@@ -27,6 +42,10 @@ function findProgramAddress(label: string, seeds: (Buffer | Uint8Array)[]): [Pub
 }
 
 export function deriveState(authority: PublicKey, mint: PublicKey): [PublicKey, number] {
+  if (configuredStatePda) {
+    return [configuredStatePda.publicKey, configuredStatePda.bump];
+  }
+
   return findProgramAddress("state", [
     toSeedBuffer(config.seedState, "state"),
     authority.toBuffer(),

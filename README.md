@@ -35,6 +35,7 @@ Variáveis principais:
 - `NEXT_PUBLIC_PROGRAM_ID`, `NEXT_PUBLIC_MINT_ADDRESS`, `NEXT_PUBLIC_AUTHORITY_ADDRESS`: informações do programa e seed.
 - `NEXT_PUBLIC_TREASURY_ADDRESS`: conta da tesouraria.
 - `NEXT_PUBLIC_SEED_*`: seeds fixas usadas nos PDAs (deixe os valores padrão se o contrato não mudou).
+- `NEXT_PUBLIC_STATE_ADDRESS` / `NEXT_PUBLIC_STATE_BUMP` (opcionais): informe o PDA já derivado do estado quando não for possível calculá-lo a partir das seeds (útil em implantações legadas).
 - `ADMIN_KEYPAIR_BASE58`: chave da autoridade em Base58 ou JSON (apenas servidor, não expor ao cliente).
 
 > ⚠️ O fluxo de compra utiliza **pre-transferência** de lamports. A transação enviada pelo cliente possui duas instruções: `SystemProgram.transfer` (buyer → state PDA) seguida da chamada `program.methods.buy`. O contrato não assina pelo comprador, portanto essa pré-transferência é obrigatória.
